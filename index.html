@@ -274,6 +274,68 @@
             box-shadow: 0 0 0 3px #ef4444;
             /* red */
         }
+
+        @media (max-width: 768px) {
+
+            .modal-content {
+                width: 95%;
+                max-width: 95%;
+                padding: 1rem;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            .detail-img {
+                width: 90px;
+                height: 90px;
+                display: block;
+                margin: 0 auto 1rem;
+            }
+
+            .detail-title {
+                font-size: 1.5rem;
+                text-align: center;
+                margin-bottom: 1rem;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 0.7rem;
+                padding: 1rem;
+                font-size: 0.95rem;
+            }
+
+            .stat-bar {
+                margin-top: 8px;
+            }
+
+            .stat-bar div:first-child {
+                font-size: 0.85rem;
+            }
+
+            .bar-bg {
+                height: 6px;
+            }
+
+            .player-token {
+                width: 46px;
+                height: 46px;
+            }
+
+            .number-badge {
+                width: 18px;
+                height: 18px;
+                font-size: 10px;
+            }
+
+            .bench-container {
+                grid-template-columns: 1fr;
+            }
+
+            .bench-panel {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 
@@ -321,13 +383,17 @@
             return [];
         }
 
-        function init() {
+        async function init() {
             try {
-                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-                players = saved.players || [];
-            } catch {
-                players = getDefaultData();
+                const response = await fetch('data.json');
+                const data = await response.json();
+
+                players = data.players || [];
+            } catch (e) {
+                console.error(e);
+                players = [];
             }
+
             players.forEach(fillStats);
             render();
         }
@@ -340,7 +406,7 @@
             players.forEach(p => {
                 if (p.status === "starter") {
                     const el = document.createElement("div");
-                    el.className = "player-token";
+                    el.className = `player-token team-${p.team}`;
                     el.style.position = "absolute";
                     el.style.left = p.pitchX + "%";
                     el.style.top = p.pitchY + "%";

@@ -534,26 +534,27 @@
         // Initialize Data
 
 
-        function loadData() {
+        async function loadData() {
             try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                const data = saved ? JSON.parse(saved) : null;
+                const res = await fetch('data.json');
+                const data = await res.json();
 
-                players = data?.players ?? [];
-                emptySlots = data?.emptySlots || [];
+                players = data.players || [];
+                emptySlots = data.emptySlots || [];
+
+                render();
             } catch (e) {
                 console.error("Failed to load data:", e);
-                players = [];
-                emptySlots = [];
             }
-
-            render();
         }
         function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            const data = {
                 players,
                 emptySlots
-            }));
+            };
+
+            console.log("COPY THIS JSON:");
+            console.log(JSON.stringify(data, null, 2));
         }
 
         // UI Rendering
