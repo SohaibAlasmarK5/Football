@@ -283,6 +283,7 @@
                 padding: 1rem;
                 max-height: 90vh;
                 overflow-y: auto;
+                position: relative;
             }
 
             .detail-img {
@@ -334,6 +335,68 @@
 
             .bench-panel {
                 padding: 1rem;
+            }
+
+            .close-modal {
+                position: absolute;
+                top: 12px;
+                right: 14px;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border: none;
+                background: #252545;
+                color: white;
+                cursor: pointer;
+                font-size: 18px;
+                transition: 0.2s ease;
+                z-index: 10;
+            }
+
+            .close-modal:hover {
+                background: #ef4444;
+                transform: scale(1.1);
+            }
+
+            @media (max-width: 950px) and (orientation: landscape) {
+
+                .modal-content {
+                    width: 95%;
+                    max-width: 95%;
+                    height: 90vh;
+                    overflow-y: auto;
+                    padding: 1rem;
+                }
+
+                .detail-img {
+                    width: 70px;
+                    height: 70px;
+                    margin-bottom: 0.5rem;
+                }
+
+                .detail-title {
+                    font-size: 1.2rem;
+                    text-align: center;
+                }
+
+                .detail-grid {
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.5rem;
+                    padding: 0.8rem;
+                    font-size: 0.85rem;
+                }
+
+                .stat-bar {
+                    margin-top: 6px;
+                }
+
+                .stat-bar div:first-child {
+                    font-size: 0.75rem;
+                }
+
+                .bar-bg {
+                    height: 5px;
+                }
             }
         }
     </style>
@@ -431,6 +494,9 @@
             const overall = calculateOverall(p);
 
             d.innerHTML = `
+            <button class="close-modal" onclick="closeModal()">
+    <i class="fa-solid fa-xmark"></i>
+</button>
     <img src="${p.image || 'Default.png'}"
      class="detail-img"
      onerror="this.src='Default.png'">
