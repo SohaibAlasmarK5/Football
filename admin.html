@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Admin | Pro Football Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --panel-bg: #111827;
+            --card-bg: #1a1a2e;
+            --gold: #f0c040;
+            --text-primary: #f0f0f0;
+            --text-muted: #9ca3af;
+            --pitch-green: #2d5a27;
+            --team-a: #3b82f6;
+            --team-b: #ef4444;
+            --radius: 10px;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --warning: #f39c12;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding-bottom: 50px;
+        }
+
+        nav {
+            background-color: var(--panel-bg);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--gold);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        .btn-gold {
+            background: var(--gold);
+            color: #000;
+        }
+
+        .btn-gold:hover {
+            background: #d4a72d;
+        }
+
+        .btn-red {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+        }
+
+        /* Pitch */
+        .pitch-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3 / 2;
+            background-color: var(--pitch-green);
+            background-image: url('PitchBG.jpg');
+            background-size: cover;
+            background-position: center;
+            border: 4px solid #fff;
+            margin-bottom: 2rem;
+        }
+
+        .admin-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--gold);
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            z-index: 5;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Empty Slot */
+        .empty-slot {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 2px dashed var(--gold);
+            position: absolute;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: rgba(240, 192, 64, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(240, 192, 64, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 12px rgba(240, 192, 64, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(240, 192, 64, 0);
+            }
+        }
+
+        /* Draggable Token */
+        .player-token {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            cursor: grab;
+            z-index: 10;
+            position: absolute;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .player-token.dragging {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.15) !important;
+            box-shadow: 0 0 20px var(--gold);
+            z-index: 1000;
+        }
+
+        .player-token .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid white;
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        .player-token .number-badge {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: var(--gold);
+            color: #000;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #000;
+        }
+
+        .player-token .name-label {
+            position: absolute;
+            top: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .token-controls {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .player-token:hover .token-controls {
+            opacity: 1;
+        }
+
+        .ctrl-btn {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .ctrl-edit {
+            background: var(--gold);
+            color: #000;
+        }
+
+        .ctrl-del {
+            background: var(--error);
+        }
+
+        /* Bench Panels */
+        .bench-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .bench-panel {
+            background: var(--panel-bg);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border-top: 4px solid var(--gold);
+            min-height: 200px;
+        }
+
+        .player-card {
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            border: 1px solid transparent;
+            cursor: grab;
+        }
+
+        .card-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        .card-info {
+            flex-grow: 1;
+            pointer-events: none;
+        }
+
+        .card-name {
+            font-weight: 600;
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Forms */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            width: 100%;
+            max-width: 550px;
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--gold);
+            position: relative;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group.full {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--card-bg);
+            border: 1px solid #333;
+            color: white;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        input.invalid {
+            border-color: var(--error);
+        }
+
+        .error-msg {
+            color: var(--error);
+            font-size: 0.75rem;
+            margin-top: 3px;
+            display: none;
+        }
+
+        .image-preview-wrap {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .img-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+        }
+
+        /* Toasts */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 250px;
+            padding: 1rem;
+            border-radius: 4px;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.3s forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--error);
+        }
+
+        .toast.warning {
+            background: var(--warning);
+        }
+
+        .toast-close {
+            cursor: pointer;
+            margin-left: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .bench-container {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">PRO PITCH ADMIN</div>
+        <div class="nav-links">
+            <a href="index.html">Viewer</a>
+            <a href="admin.html" style="color: var(--gold)">Admin</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="admin-header">
+            <h2>Squad Management</h2>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add
+                    Player</button>
+                <button class="btn btn-red" onclick="confirmReset()"><i class="fa-solid fa-rotate-left"></i>
+                    Reset</button>
+            </div>
+        </div>
+
+        <div class="pitch-wrapper" id="pitch">
+            <div class="admin-badge">ADMIN MODE</div>
+            <!-- Tokens and Slots Injected Here -->
+        </div>
+
+        <div class="bench-container">
+            <div class="bench-panel" id="bench-A-zone" ondragover="event.preventDefault()"
+                ondrop="dropToBench(event, 'A')">
+                <h3 style="margin-bottom:1rem; color:var(--team-a)">TEAM A BENCH</h3>
+                <div id="bench-A"></div>
+            </div>
+            <div class="bench-panel" id="bench-B-zone" ondragover="event.preventDefault()"
+                ondrop="dropToBench(event, 'B')">
+                <h3 style="margin-bottom:1rem; color:var(--team-b)">TEAM B BENCH</h3>
+                <div id="bench-B"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div class="modal-backdrop" id="modal-backdrop">
+        <div class="modal-content" id="modal-container">
+            <!-- Forms dynamically injected -->
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        const STORAGE_KEY = "football_match_data";
+        let players = [];
+        let emptySlots = []; // {team, x, y}
+
+        // Initialize Data
+        function getDefaultData() {
+            const data = [];
+            const teams = ["A", "B"];
+            const positions = ["GK", "DEF", "DEF", "MID", "MID", "FWD"];
+            const nationalities = ["England", "Brazil", "France", "Germany", "Spain", "Argentina", "Italy", "Portugal", "Netherlands", "Japan"];
+            let id = 1;
+            teams.forEach(team => {
+                positions.forEach((pos, idx) => {
+                    let px, py;
+                    if (team === "A") {
+                        py = 90 - (idx * 6); px = 50 + (idx % 2 === 0 ? idx * 10 : -idx * 10);
+                        if (pos === "GK") { px = 50; py = 92; }
+                        if (pos === "FWD") { px = 50; py = 55; }
+                    } else {
+                        py = 10 + (idx * 6); px = 50 + (idx % 2 === 0 ? idx * 10 : -idx * 10);
+                        if (pos === "GK") { px = 50; py = 8; }
+                        if (pos === "FWD") { px = 50; py = 45; }
+                    }
+                    data.push({ id: id++, name: `Player ${id} Fullname`, number: 10 + id, position: pos, team: team, status: "starter", pitchX: px, pitchY: py, image: `https://i.pravatar.cc/150?img=${id}`, age: 25, nationality: "Spain", appearances: 10, goals: 5, assists: 2 });
+                });
+                for (let i = 0; i < 6; i++) {
+                    data.push({ id: id++, name: `Sub ${id} Name`, number: 20 + id, position: positions[i % 6], team: team, status: "substitute", pitchX: null, pitchY: null, image: `https://i.pravatar.cc/150?img=${id}`, age: 22, nationality: "Brazil", appearances: 2, goals: 0, assists: 0 });
+                }
+            });
+            return data;
+        }
+
+        function loadData() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                players = (saved && saved.length) ? saved : getDefaultData();
+            } catch { players = getDefaultData(); }
+            saveData();
+            render();
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+        }
+
+        // UI Rendering
+        function render() {
+            const pitch = document.getElementById('pitch');
+            const badge = pitch.querySelector('.admin-badge');
+            pitch.innerHTML = '';
+            pitch.appendChild(badge);
+
+            document.getElementById('bench-A').innerHTML = '';
+            document.getElementById('bench-B').innerHTML = '';
+
+            // Render Empty Slots
+            emptySlots.forEach((slot, index) => {
+                const el = document.createElement('div');
+                el.className = 'empty-slot';
+                el.style.left = slot.x + '%';
+                el.style.top = slot.y + '%';
+                el.innerHTML = '<i class="fa-solid fa-plus"></i>';
+                el.onclick = () => openBenchPicker(slot, index);
+                pitch.appendChild(el);
+            });
+
+            players.forEach(p => {
+                if (p.status === "starter") {
+                    renderToken(p);
+                } else {
+                    renderBenchCard(p);
+                }
+            });
+        }
+
+        function renderToken(p) {
+            const pitch = document.getElementById('pitch');
+            const token = document.createElement('div');
+            token.className = `player-token team-${p.team}`;
+            token.style.left = p.pitchX + "%";
+            token.style.top = p.pitchY + "%";
+            token.style.transform = "translate(-50%, -50%)";
+            token.id = `token-${p.id}`;
+
+            token.innerHTML = `
+            <img src="${p.image}" class="avatar" onerror="this.src='https://i.pravatar.cc/150?img=${p.id}'">
+            <div class="number-badge">${p.number}</div>
+            <div class="name-label">${p.name}</div>
+            <div class="token-controls">
+                <button class="ctrl-btn ctrl-edit" onclick="event.stopPropagation(); openEditModal(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                <button class="ctrl-btn ctrl-del" onclick="event.stopPropagation(); confirmRemove(${p.id})"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        `;
+
+            // Mouse Dragging
+            token.onmousedown = (e) => startDrag(e, token, p);
+            // Touch Dragging
+            token.ontouchstart = (e) => startDrag(e.touches[0], token, p, true);
+
+            pitch.appendChild(token);
+        }
+
+        function renderBenchCard(p) {
+            const card = document.createElement('div');
+            card.className = 'player-card';
+            card.draggable = true;
+            card.dataset.id = p.id;
+            card.innerHTML = `
+            <img src="${p.image}" class="card-avatar" onerror="this.src='https://i.pravatar.cc/150?img=${p.id}'">
+            <div class="card-info">
+                <span class="card-name">${p.name}</span>
+                <span style="font-size:0.75rem; color:var(--text-muted)">#${p.number} | ${p.position}</span>
+            </div>
+            <div class="card-actions">
+                <button class="ctrl-btn ctrl-edit" onclick="openEditModal(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                <button class="ctrl-btn ctrl-del" onclick="confirmRemove(${p.id})"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        `;
+
+            card.ondragstart = (e) => e.dataTransfer.setData("playerId", p.id);
+            document.getElementById(`bench-${p.team}`).appendChild(card);
+        }
+
+        // Drag and Drop Logic
+        let currentDraggingPlayer = null;
+
+        function startDrag(e, token, player, isTouch = false) {
+            if (e.target.closest('.token-controls')) return;
+
+            currentDraggingPlayer = player;
+            token.classList.add('dragging');
+            const pitch = document.getElementById('pitch');
+            const rect = pitch.getBoundingClientRect();
+
+            const moveHandler = (moveEvent) => {
+                if (isTouch) moveEvent.preventDefault();
+                const clientX = isTouch ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                const clientY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
+
+                let x = ((clientX - rect.left) / rect.width) * 100;
+                let y = ((clientY - rect.top) / rect.height) * 100;
+
+                x = Math.min(Math.max(x, 2), 98);
+                y = Math.min(Math.max(y, 2), 98);
+
+                token.style.left = x + "%";
+                token.style.top = y + "%";
+
+                // Check if hovering over another token for swap
+                document.querySelectorAll('.player-token').forEach(other => {
+                    if (other.id === token.id) return;
+                    const otherRect = other.getBoundingClientRect();
+                    const dist = Math.hypot(clientX - (otherRect.left + 28), clientY - (otherRect.top + 28));
+                    if (dist < 30) other.style.filter = "brightness(1.5) scale(1.1)";
+                    else other.style.filter = "";
+                });
+            };
+
+            const endHandler = (endEvent) => {
+                const clientX = isTouch ? endEvent.changedTouches[0].clientX : endEvent.clientX;
+                const clientY = isTouch ? endEvent.changedTouches[0].clientY : endEvent.clientY;
+
+                token.classList.remove('dragging');
+                document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler);
+                document.removeEventListener(isTouch ? 'touchend' : 'mouseup', endHandler);
+
+                // Logic: 1. Swap? 2. Bench? 3. Regular Move
+
+                // Swap check
+                let swapped = false;
+                document.querySelectorAll('.player-token').forEach(other => {
+                    if (other.id === token.id) return;
+                    const otherRect = other.getBoundingClientRect();
+                    const dist = Math.hypot(clientX - (otherRect.left + 28), clientY - (otherRect.top + 28));
+                    if (dist < 30) {
+                        const otherId = parseInt(other.id.replace('token-', ''));
+                        const otherP = players.find(x => x.id === otherId);
+                        const oldX = player.pitchX; const oldY = player.pitchY;
+                        player.pitchX = otherP.pitchX; player.pitchY = otherP.pitchY;
+                        otherP.pitchX = oldX; otherP.pitchY = oldY;
+                        showToast("Positions swapped", "success");
+                        swapped = true;
+                    }
+                });
+
+                if (swapped) { saveData(); render(); return; }
+
+                // Bench check
+                const benchZone = document.getElementById(`bench-${player.team}-zone`).getBoundingClientRect();
+                if (clientX >= benchZone.left && clientX <= benchZone.right && clientY >= benchZone.top && clientY <= benchZone.bottom) {
+                    moveToBench(player.id);
+                    return;
+                }
+
+                // Normal move
+                player.pitchX = parseFloat(token.style.left);
+                player.pitchY = parseFloat(token.style.top);
+                saveData();
+                showToast("Position saved", "success");
+                render();
+            };
+
+            document.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, { passive: false });
+            document.addEventListener(isTouch ? 'touchend' : 'mouseup', endHandler);
+        }
+
+        // Pitch Drop Zone Logic
+        document.getElementById('pitch').ondragover = (e) => e.preventDefault();
+        document.getElementById('pitch').ondrop = (e) => {
+            e.preventDefault();
+            const pid = parseInt(e.dataTransfer.getData("playerId"));
+            if (!pid) return;
+
+            const p = players.find(x => x.id === pid);
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+            moveToPitch(p, x, y);
+        };
+
+        function moveToPitch(player, x, y) {
+            const startersCount = players.filter(p => p.team === player.team && p.status === "starter").length;
+            if (startersCount >= 6) {
+                showToast(`Team ${player.team} is full (6 starters max)`, "error");
+                return;
+            }
+            player.status = "starter";
+            player.pitchX = Math.min(Math.max(x, 2), 98);
+            player.pitchY = Math.min(Math.max(y, 2), 98);
+            saveData();
+            showToast(`${player.name} moved to pitch`, "success");
+            render();
+        }
+
+        function moveToBench(pid) {
+            const p = players.find(x => x.id === pid);
+            emptySlots.push({ team: p.team, x: p.pitchX, y: p.pitchY });
+            p.status = "substitute";
+            p.pitchX = null;
+            p.pitchY = null;
+            saveData();
+            showToast(`${p.name} moved to bench`, "success");
+            render();
+        }
+
+        function dropToBench(e, team) {
+            const pid = parseInt(e.dataTransfer.getData("playerId"));
+            const p = players.find(x => x.id === pid);
+            if (p && p.team === team && p.status === "starter") {
+                moveToBench(pid);
+            } else if (p && p.team !== team) {
+                showToast("Cannot move to opponent's bench", "error");
+            }
+        }
+
+        // Modals & Forms
+        function openAddModal() {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+            <h3>Add New Player</h3>
+            <div class="image-preview-wrap">
+                <img id="prev-img" src="https://i.pravatar.cc/150?img=0" class="img-preview">
+                <div><label>Live Preview</label></div>
+            </div>
+            <form id="player-form">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label>Full Name *</label>
+                        <input type="text" id="f-name" required>
+                        <div class="error-msg">Name is required</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Number (1-99) *</label>
+                        <input type="number" id="f-num" min="1" max="99" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Position *</label>
+                        <select id="f-pos">
+                            <option value="GK">GK</option>
+                            <option value="DEF">DEF</option>
+                            <option value="MID">MID</option>
+                            <option value="FWD">FWD</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Team *</label>
+                        <select id="f-team"><option value="A">Team A</option><option value="B">Team B</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Age *</label>
+                        <input type="number" id="f-age" value="24" required>
+                    </div>
+                    <div class="form-group full">
+                        <label>Image URL</label>
+                        <input type="text" id="f-img" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label>Nationality</label>
+                        <input type="text" id="f-nat" value="England">
+                    </div>
+                    <div class="form-group">
+                        <label>Goals</label>
+                        <input type="number" id="f-goals" value="0">
+                    </div>
+                </div>
+                <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-gold">Save Player</button>
+                </div>
+            </form>
+        `;
+            setupFormLogic(null);
+            showModal();
+        }
+
+        function openEditModal(id) {
+            const p = players.find(x => x.id === id);
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+            <h3>Edit Player: ${p.name}</h3>
+            <div class="image-preview-wrap">
+                <img id="prev-img" src="${p.image}" class="img-preview" onerror="this.src='https://i.pravatar.cc/150?img=${p.id}'">
+                <div><label>Live Preview</label></div>
+            </div>
+            <form id="player-form">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label>Full Name *</label>
+                        <input type="text" id="f-name" value="${p.name}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Number *</label>
+                        <input type="number" id="f-num" value="${p.number}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Position *</label>
+                        <select id="f-pos">
+                            <option value="GK" ${p.position === 'GK' ? 'selected' : ''}>GK</option>
+                            <option value="DEF" ${p.position === 'DEF' ? 'selected' : ''}>DEF</option>
+                            <option value="MID" ${p.position === 'MID' ? 'selected' : ''}>MID</option>
+                            <option value="FWD" ${p.position === 'FWD' ? 'selected' : ''}>FWD</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Team *</label>
+                        <select id="f-team" disabled><option value="A" ${p.team === 'A' ? 'selected' : ''}>Team A</option><option value="B" ${p.team === 'B' ? 'selected' : ''}>Team B</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="f-age" value="${p.age}">
+                    </div>
+                    <div class="form-group full">
+                        <label>Image URL</label>
+                        <input type="text" id="f-img" value="${p.image}">
+                    </div>
+                    <div class="form-group">
+                        <label>Nationality</label>
+                        <input type="text" id="f-nat" value="${p.nationality}">
+                    </div>
+                    <div class="form-group">
+                        <label>Appearances</label>
+                        <input type="number" id="f-app" value="${p.appearances}">
+                    </div>
+                </div>
+                <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-gold">Update</button>
+                </div>
+            </form>
+        `;
+            setupFormLogic(p);
+            showModal();
+        }
+
+        function setupFormLogic(playerToEdit) {
+            const form = document.getElementById('player-form');
+            const imgInput = document.getElementById('f-img');
+            const preview = document.getElementById('prev-img');
+
+            imgInput.oninput = () => {
+                preview.src = imgInput.value || `https://i.pravatar.cc/150?img=${playerToEdit ? playerToEdit.id : 99}`;
+            };
+
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                const name = document.getElementById('f-name').value;
+                const num = parseInt(document.getElementById('f-num').value);
+                const pos = document.getElementById('f-pos').value;
+                const team = document.getElementById('f-team').value;
+
+                if (!name || isNaN(num)) {
+                    showToast("Please fill required fields", "error");
+                    return;
+                }
+
+                if (playerToEdit) {
+                    playerToEdit.name = name;
+                    playerToEdit.number = num;
+                    playerToEdit.position = pos;
+                    playerToEdit.age = parseInt(document.getElementById('f-age').value);
+                    playerToEdit.image = imgInput.value || playerToEdit.image;
+                    playerToEdit.nationality = document.getElementById('f-nat').value;
+                    playerToEdit.appearances = parseInt(document.getElementById('f-app').value);
+                    showToast("Player updated", "success");
+                } else {
+                    const newId = Date.now();
+                    players.push({
+                        id: newId, name, number: num, position: pos, team, status: "substitute",
+                        pitchX: null, pitchY: null, age: parseInt(document.getElementById('f-age').value),
+                        image: imgInput.value || `https://i.pravatar.cc/150?img=${newId % 70}`,
+                        nationality: document.getElementById('f-nat').value,
+                        appearances: 0, goals: parseInt(document.getElementById('f-goals').value), assists: 0
+                    });
+                    showToast(`${name} added to bench`, "success");
+                }
+                saveData();
+                closeModal();
+                render();
+            };
+        }
+
+        function confirmRemove(id) {
+            const p = players.find(x => x.id === id);
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+            <h3>Remove Player</h3>
+            <p style="margin: 1.5rem 0; color: var(--text-muted)">Are you sure you want to remove <strong>${p.name} (#${p.number})</strong> from the squad?</p>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-red" onclick="removePlayer(${id})">Confirm Remove</button>
+            </div>
+        `;
+            showModal();
+        }
+
+        function removePlayer(id) {
+            const idx = players.findIndex(x => x.id === id);
+            const p = players[idx];
+            if (p.status === "starter") {
+                emptySlots.push({ team: p.team, x: p.pitchX, y: p.pitchY });
+            }
+            players.splice(idx, 1);
+            saveData();
+            closeModal();
+            render();
+            showToast("Player removed from squad", "success");
+        }
+
+        function confirmReset() {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+            <h3>Reset to Default</h3>
+            <p style="margin: 1.5rem 0; color: var(--text-muted)">This will wipe all current changes and restore the default squad. Continue?</p>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-red" onclick="resetSquad()">Reset Everything</button>
+            </div>
+        `;
+            showModal();
+        }
+
+        function resetSquad() {
+            localStorage.removeItem(STORAGE_KEY);
+            emptySlots = [];
+            loadData();
+            closeModal();
+            showToast("Squad reset to default", "success");
+        }
+
+        function openBenchPicker(slot, slotIdx) {
+            const subs = players.filter(p => p.team === slot.team && p.status === "substitute");
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+            <h3>Select Player for Pitch</h3>
+            <div style="max-height: 300px; overflow-y: auto; margin: 15px 0;">
+                ${subs.length ? subs.map(p => `
+                    <div class="player-card" onclick="pickFromBench(${p.id}, ${slot.x}, ${slot.y}, ${slotIdx})" style="cursor:pointer">
+                        <img src="${p.image}" class="card-avatar">
+                        <div class="card-info">
+                            <span class="card-name">${p.name}</span>
+                            <span style="font-size:0.75rem">#${p.number} | ${p.position}</span>
+                        </div>
+                    </div>
+                `).join('') : '<p>No substitutes available for this team.</p>'}
+            </div>
+            <button class="btn btn-outline" style="width:100%" onclick="closeModal()">Close</button>
+        `;
+            showModal();
+        }
+
+        function pickFromBench(pid, x, y, slotIdx) {
+            const p = players.find(x => x.id === pid);
+            p.status = "starter";
+            p.pitchX = x;
+            p.pitchY = y;
+            emptySlots.splice(slotIdx, 1);
+            saveData();
+            closeModal();
+            render();
+            showToast(`${p.name} entered the pitch`, "success");
+        }
+
+        // Modal Helpers
+        function showModal() { document.getElementById('modal-backdrop').style.display = 'flex'; }
+        function closeModal() { document.getElementById('modal-backdrop').style.display = 'none'; }
+
+        // Toast System
+        function showToast(msg, type = "success") {
+            const container = document.getElementById('toast-container');
+            if (container.children.length >= 3) container.removeChild(container.firstChild);
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+            <span>${msg}</span>
+            <span class="toast-close" onclick="this.parentElement.remove()">&times;</span>
+        `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 3000);
+        }
+
+        // Global Events
+        window.onkeydown = (e) => { if (e.key === "Escape") closeModal(); };
+        document.getElementById('modal-backdrop').onclick = (e) => {
+            if (e.target.id === 'modal-backdrop') closeModal();
+        };
+
+        loadData();
+    </script>
+</body>
+
+</html>
