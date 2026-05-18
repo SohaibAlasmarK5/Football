@@ -255,6 +255,25 @@
             height: 100%;
             background: var(--gold);
         }
+
+        .player-token {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Team colors */
+        .player-token.team-A {
+            box-shadow: 0 0 0 3px #3b82f6;
+            /* blue */
+        }
+
+        .player-token.team-B {
+            box-shadow: 0 0 0 3px #ef4444;
+            /* red */
+        }
     </style>
 </head>
 
@@ -299,35 +318,13 @@
         }
 
         function getDefaultData() {
-            const data = [];
-            let id = 1;
-            ["A", "B"].forEach(team => {
-                POSITIONS.slice(0, 6).forEach((pos, i) => {
-                    data.push({
-                        id: id++,
-                        name: "Player " + id,
-                        number: Math.floor(Math.random() * 99),
-                        position: pos,
-                        team,
-                        status: "starter",
-                        pitchX: 50,
-                        pitchY: 20 + i * 8,
-                        image: `https://i.pravatar.cc/150?img=${id}`,
-                        age: 20,
-                        nationality: "Spain",
-                        appearances: 10,
-                        goals: 5,
-                        assists: 2,
-                        pace: 60, shooting: 60, passing: 60, dribbling: 60, defending: 60, physical: 60, vision: 60, stamina: 60, strength: 60, aggression: 60
-                    });
-                });
-            });
-            return data;
+            return [];
         }
 
         function init() {
             try {
-                players = JSON.parse(localStorage.getItem(STORAGE_KEY)) || getDefaultData();
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+                players = saved.players || [];
             } catch {
                 players = getDefaultData();
             }
@@ -347,13 +344,15 @@
                     el.style.position = "absolute";
                     el.style.left = p.pitchX + "%";
                     el.style.top = p.pitchY + "%";
-                    el.innerHTML = `<img class="avatar" src="${p.image}"><div class="number-badge">${p.number}</div>`;
+                    el.innerHTML = `<img class="avatar" src="${p.image || 'Default.png'}"
+     onerror="this.src='Default.png'"><div class="number-badge">${p.number}</div>`;
                     el.onclick = () => showDetails(p.id);
                     document.getElementById("pitch").appendChild(el);
                 } else {
                     const el = document.createElement("div");
                     el.className = "player-card";
-                    el.innerHTML = `<img class="card-avatar" src="${p.image}"><div><div class="card-name">${p.name}</div><span class="pos-badge">${p.position}</span></div>`;
+                    el.innerHTML = `<img class="card-avatar" src="${p.image || 'Default.png'}"
+     onerror="this.src='Default.png'"><div><div class="card-name">${p.name}</div><span class="pos-badge">${p.position}</span></div>`;
                     el.onclick = () => showDetails(p.id);
                     document.getElementById("bench-" + p.team).appendChild(el);
                 }
@@ -365,7 +364,9 @@
             const d = document.getElementById("player-details");
 
             d.innerHTML = `
-    <img src="${p.image}" class="detail-img">
+    <img src="${p.image || 'Default.png'}"
+     class="detail-img"
+     onerror="this.src='Default.png'">
     <h2 class="detail-title">${p.name}</h2>
     <div class="detail-grid">
         <div>Position: ${p.position}</div>

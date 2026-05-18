@@ -537,17 +537,23 @@
         function loadData() {
             try {
                 const saved = localStorage.getItem(STORAGE_KEY);
-                players = saved ? JSON.parse(saved) : [];
+                const data = saved ? JSON.parse(saved) : null;
+
+                players = data?.players ?? [];
+                emptySlots = data?.emptySlots || [];
             } catch (e) {
                 console.error("Failed to load data:", e);
                 players = [];
+                emptySlots = [];
             }
 
-            saveData();
             render();
         }
         function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                players,
+                emptySlots
+            }));
         }
 
         // UI Rendering
@@ -555,7 +561,7 @@
             const pitch = document.getElementById('pitch');
             const badge = pitch.querySelector('.admin-badge');
             pitch.innerHTML = '';
-            pitch.appendChild(badge);
+            if (badge) pitch.appendChild(badge);
 
             document.getElementById('bench-A').innerHTML = '';
             document.getElementById('bench-B').innerHTML = '';
@@ -590,7 +596,8 @@
             token.id = `token-${p.id}`;
 
             token.innerHTML = `
-            <img src="${p.image}" class="avatar" onerror="this.src='https://i.pravatar.cc/150?img=${p.id}'">
+          <img src="${p.image || 'Default.png'}" class="avatar"
+     onerror="this.src='Default.png'">
             <div class="number-badge">${p.number}</div>
             <div class="name-label">${p.name}</div>
             <div class="token-controls">
@@ -613,7 +620,8 @@
             card.draggable = true;
             card.dataset.id = p.id;
             card.innerHTML = `
-            <img src="${p.image}" class="card-avatar" onerror="this.src='https://i.pravatar.cc/150?img=${p.id}'">
+           <img src="${p.image || 'Default.png'}" class="card-avatar"
+     onerror="this.src='Default.png'">
             <div class="card-info">
                 <span class="card-name">${p.name}</span>
                 <span style="font-size:0.75rem; color:var(--text-muted)">#${p.number} | ${p.position}</span>
@@ -668,44 +676,101 @@
                 const clientY = isTouch ? endEvent.changedTouches[0].clientY : endEvent.clientY;
 
                 token.classList.remove('dragging');
+
                 document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler);
                 document.removeEventListener(isTouch ? 'touchend' : 'mouseup', endHandler);
 
-                // Logic: 1. Swap? 2. Bench? 3. Regular Move
-
-                // Swap check
                 let swapped = false;
-                document.querySelectorAll('.player-token').forEach(other => {
-                    if (other.id === token.id) return;
-                    const otherRect = other.getBoundingClientRect();
-                    const dist = Math.hypot(clientX - (otherRect.left + 28), clientY - (otherRect.top + 28));
-                    if (dist < 30) {
-                        const otherId = parseInt(other.id.replace('token-', ''));
-                        const otherP = players.find(x => x.id === otherId);
-                        const oldX = player.pitchX; const oldY = player.pitchY;
-                        player.pitchX = otherP.pitchX; player.pitchY = otherP.pitchY;
-                        otherP.pitchX = oldX; otherP.pitchY = oldY;
-                        showToast("POSITIONS swapped", "success");
-                        saveData();
+
+                // =========================
+                // 1. SWAP CHECK
+                // =========================
+                const tokens = document.querySelectorAll('.player-token');
+
+                for (let other of tokens) {
+                    if (other.id === token.id) continue;
+
+                    const otherId = parseInt(other.id.replace('token-', ''));
+                    const otherP = players.find(x => x.id === otherId);
+                    if (!otherP) continue;
+
+                    const rect = other.getBoundingClientRect();
+
+                    const dist = Math.hypot(
+                        clientX - (rect.left + rect.width / 2),
+                        clientY - (rect.top + rect.height / 2)
+                    );
+
+                    if (dist < 35) {
+                        const oldX = player.pitchX;
+                        const oldY = player.pitchY;
+
+                        player.pitchX = otherP.pitchX;
+                        player.pitchY = otherP.pitchY;
+
+                        otherP.pitchX = oldX;
+                        otherP.pitchY = oldY;
+
                         swapped = true;
+
+                        showToast("Positions swapped", "success");
+                        break;
                     }
-                });
+                }
 
-                if (swapped) { saveData(); render(); return; }
-
-                // Bench check
-                const benchZone = document.getElementById(`bench-${player.team}-zone`).getBoundingClientRect();
-                if (clientX >= benchZone.left && clientX <= benchZone.right && clientY >= benchZone.top && clientY <= benchZone.bottom) {
-                    moveToBench(player.id);
+                if (swapped) {
+                    saveData();
+                    render();
+                    currentDraggingPlayer = null;
                     return;
                 }
 
-                // Normal move
-                player.pitchX = parseFloat(token.style.left);
-                player.pitchY = parseFloat(token.style.top);
+                // =========================
+                // 2. BENCH CHECK
+                // =========================
+                const benchZone = document
+                    .getElementById(`bench-${player.team}-zone`)
+                    .getBoundingClientRect();
+
+                const inBench =
+                    clientX >= benchZone.left &&
+                    clientX <= benchZone.right &&
+                    clientY >= benchZone.top &&
+                    clientY <= benchZone.bottom;
+
+                if (inBench) {
+                    if (player.pitchX != null && player.pitchY != null) {
+                        emptySlots.push({
+                            team: player.team,
+                            x: player.pitchX,
+                            y: player.pitchY
+                        });
+                    }
+
+                    moveToBench(player.id);
+                    currentDraggingPlayer = null;
+                    return;
+                }
+
+                // =========================
+                // 3. SAVE POSITION
+                // =========================
+                const pitch = document.getElementById('pitch').getBoundingClientRect();
+
+                let x = ((clientX - pitch.left) / pitch.width) * 100;
+                let y = ((clientY - pitch.top) / pitch.height) * 100;
+
+                x = Math.min(Math.max(x, 2), 98);
+                y = Math.min(Math.max(y, 2), 98);
+
+                player.pitchX = x;
+                player.pitchY = y;
+
                 saveData();
                 showToast("Position saved", "success");
                 render();
+
+                currentDraggingPlayer = null;
             };
 
             document.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, { passive: false });
@@ -768,7 +833,7 @@
             container.innerHTML = `
             <h3>Add New Player</h3>
             <div class="image-preview-wrap">
-                <img id="prev-img" src="https://i.pravatar.cc/150?img=0" class="img-preview">
+                <img id="prev-img" class="avatar" style="display:none;">
                 <div><label>Live Preview</label></div>
             </div>
             <form id="player-form">
@@ -808,7 +873,11 @@
                     <div class="form-group">
                         <label>Goals</label>
                         <input type="number" id="f-goals" value="0">
-                         <h4 style="margin-top:10px;">Player Stats</h4>${statInputs()}
+                        
+                    </div>
+                    <div class="form-group full">
+                    <h4 style="margin-top:10px;">Player Stats</h4>
+                    ${statInputs()}
                     </div>
                 </div>
                 <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
@@ -827,7 +896,7 @@
             container.innerHTML = `
             <h3>Edit Player: ${p.name}</h3>
             <div class="image-preview-wrap">
-                <img id="prev-img" src="${p.image}" class="img-preview" onerror="this.src='https://i.pravatar.cc/150?img=${p.id}'">
+                <img id="prev-img" class="avatar" style="display:none;">
                 <div><label>Live Preview</label></div>
             </div>
             <form id="player-form">
@@ -865,7 +934,9 @@
                     <div class="form-group">
                         <label>Appearances</label>
                         <input type="number" id="f-app" value="${p.appearances}">
-                         <h4 style="margin-top:10px;">Player Stats</h4>${statInputs(p)}
+                    </div>
+                    <div class="form-group full">
+                     <h4 style="margin-top:10px;">Player Stats</h4>${statInputs(p)}
                     </div>
                 </div>
                 <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
@@ -915,7 +986,12 @@
             const preview = document.getElementById('prev-img');
 
             imgInput.oninput = () => {
-                preview.src = imgInput.value || `https://i.pravatar.cc/150?img=${playerToEdit ? playerToEdit.id : 99}`;
+                if (imgInput.value.trim() === "") {
+                    preview.style.display = "none";
+                } else {
+                    preview.style.display = "block";
+                    preview.src = imgInput.value;
+                }
             };
             const getStat = (id) => +document.getElementById(id).value || 50;
             form.onsubmit = (e) => {
@@ -945,7 +1021,7 @@
                     players.push({
                         id: newId, name, number: num, position: pos, team, status: "substitute",
                         pitchX: null, pitchY: null, age: parseInt(document.getElementById('f-age').value),
-                        image: imgInput.value || `https://i.pravatar.cc/150?img=${newId % 70}`,
+                        image: imgInput.value || null,
                         nationality: document.getElementById('f-nat').value,
                         appearances: 0, goals: parseInt(document.getElementById('f-goals').value), assists: 0,
                         pace: getStat("pace"),
@@ -986,6 +1062,7 @@
             const idx = players.findIndex(x => x.id === id);
             const p = players[idx];
             if (p.status === "starter") {
+                emptySlots = emptySlots.filter(s => !(s.x === p.pitchX && s.y === p.pitchY && s.team === p.team));
                 emptySlots.push({ team: p.team, x: p.pitchX, y: p.pitchY });
             }
             players.splice(idx, 1);
@@ -1012,9 +1089,10 @@
             localStorage.removeItem(STORAGE_KEY);
             players = [];
             emptySlots = [];
-            loadData();
+            saveData();   // ADD THIS
+            render();     // ADD THIS
             closeModal();
-            showToast("Squad reset to default", "success");
+            showToast("Squad reset", "success");
         }
 
         function openBenchPicker(slot, slotIdx) {
