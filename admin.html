@@ -532,79 +532,20 @@
             "SS", "CF"
         ];
         // Initialize Data
-        function getDefaultData() {
-            const data = [];
 
-            const teams = ["A", "B"];
-            function fillStats(p) {
-                const def = {
-                    pace: 50,
-                    shooting: 50,
-                    passing: 50,
-                    dribbling: 50,
-                    defending: 50,
-                    physical: 50,
-                    vision: 50,
-                    stamina: 50,
-                    strength: 50,
-                    aggression: 50
-                };
-
-                Object.keys(def).forEach(k => {
-                    if (typeof p[k] !== "number") p[k] = def[k];
-                });
-            }
-            const nationalities = ["England", "Brazil", "France", "Germany", "Spain", "Argentina", "Italy", "Portugal", "Netherlands", "Japan"];
-            let id = 1;
-            teams.forEach(team => {
-                POSITIONS.slice(0, 6).forEach((pos, idx) => {
-                    let px, py;
-                    if (team === "A") {
-                        py = 90 - (idx * 6); px = 50 + (idx % 2 === 0 ? idx * 10 : -idx * 10);
-                        if (pos === "GK") { px = 50; py = 92; }
-                        if (pos === "FWD") { px = 50; py = 55; }
-                    } else {
-                        py = 10 + (idx * 6); px = 50 + (idx % 2 === 0 ? idx * 10 : -idx * 10);
-                        if (pos === "GK") { px = 50; py = 8; }
-                        if (pos === "FWD") { px = 50; py = 45; }
-                    }
-                    data.push({ id: id++, name: `Player ${id} Fullname`, number: 10 + id, position: pos, team: team, status: "starter", pitchX: px, pitchY: py, image: `https://i.pravatar.cc/150?img=${id}`, age: 25, nationality: "Spain", appearances: 10, goals: 5, assists: 2 });
-                });
-                for (let i = 0; i < 6; i++) {
-                    data.push({ id: id++, name: `Sub ${id} Name`, number: 20 + id, position: POSITIONS[i % 6], team: team, status: "substitute", pitchX: null, pitchY: null, image: `https://i.pravatar.cc/150?img=${id}`, age: 22, nationality: "Brazil", appearances: 2, goals: 0, assists: 0 });
-                }
-            });
-            return data;
-        }
 
         function loadData() {
             try {
-                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-                players = (saved && saved.length) ? saved : getDefaultData();
-                players.forEach(p => {
-                    const def = {
-                        pace: 50,
-                        shooting: 50,
-                        passing: 50,
-                        dribbling: 50,
-                        defending: 50,
-                        physical: 50,
-                        vision: 50,
-                        stamina: 50,
-                        strength: 50,
-                        aggression: 50
-                    };
+                const saved = localStorage.getItem(STORAGE_KEY);
+                players = saved ? JSON.parse(saved) : [];
+            } catch (e) {
+                console.error("Failed to load data:", e);
+                players = [];
+            }
 
-                    Object.keys(def).forEach(k => {
-                        if (typeof p[k] !== "number") p[k] = def[k];
-                    });
-                });
-            } catch { players = getDefaultData(); }
             saveData();
             render();
-
         }
-
         function saveData() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
         }
