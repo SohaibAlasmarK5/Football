@@ -38,7 +38,6 @@
             line-height: 1.4;
         }
 
-        /* Navbar */
         nav {
             background-color: var(--panel-bg);
             padding: 1rem 2rem;
@@ -59,36 +58,21 @@
             letter-spacing: 2px;
         }
 
-        .nav-links a {
-            color: var(--text-primary);
-            text-decoration: none;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            border: 1px solid transparent;
-            transition: var(--transition);
-        }
-
-        .nav-links a:hover {
-            color: var(--gold);
-            border-bottom-color: var(--gold);
-        }
-
-        /* Main Layout */
         main {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
 
-        /* Pitch Container */
         .pitch-wrapper {
             position: relative;
             width: 100%;
             aspect-ratio: 3 / 2;
             background-color: var(--pitch-green);
-            background-image: url('PitchBG.jpg');
+            background-image: url('football_field.jpeg');
             background-size: cover;
             background-position: center;
+            background-repeat: no-repeat;
             border: 4px solid #fff;
             border-radius: 4px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -96,7 +80,6 @@
             overflow: hidden;
         }
 
-        /* Player Tokens */
         .player-token {
             width: 56px;
             height: 56px;
@@ -117,14 +100,6 @@
             border: 2px solid white;
             object-fit: cover;
             background: #444;
-        }
-
-        .player-token.team-A .avatar {
-            border-color: var(--team-a);
-        }
-
-        .player-token.team-B .avatar {
-            border-color: var(--team-b);
         }
 
         .number-badge {
@@ -158,7 +133,6 @@
             pointer-events: none;
         }
 
-        /* Bench Sections */
         .bench-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -178,15 +152,6 @@
             text-transform: uppercase;
             border-bottom: 1px solid #333;
             padding-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .bench-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
         }
 
         .player-card {
@@ -213,18 +178,9 @@
             object-fit: cover;
         }
 
-        .card-info {
-            flex-grow: 1;
-        }
-
         .card-name {
             font-weight: 600;
             display: block;
-        }
-
-        .card-meta {
-            font-size: 0.85rem;
-            color: var(--text-muted);
         }
 
         .pos-badge {
@@ -236,7 +192,6 @@
             font-weight: bold;
         }
 
-        /* Modal */
         .modal-backdrop {
             position: fixed;
             top: 0;
@@ -259,37 +214,6 @@
             position: relative;
             padding: 2rem;
             border: 1px solid var(--gold);
-            animation: modalIn 0.3s ease-out;
-        }
-
-        @keyframes modalIn {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 1.5rem;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .close-modal:hover {
-            color: var(--gold);
-        }
-
-        .detail-header {
-            text-align: center;
-            margin-bottom: 1.5rem;
         }
 
         .detail-img {
@@ -315,27 +239,21 @@
             border-radius: 8px;
         }
 
-        .detail-item span:first-child {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
+        .stat-bar {
+            margin-top: 10px;
         }
 
-        .detail-item span:last-child {
-            font-size: 1.1rem;
-            font-weight: 600;
+        .bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
         }
 
-        @media (max-width: 768px) {
-            .bench-container {
-                grid-template-columns: 1fr;
-            }
-
-            .pitch-wrapper {
-                aspect-ratio: 1 / 1.2;
-                background-size: auto 100%;
-            }
+        .bar-fill {
+            height: 100%;
+            background: var(--gold);
         }
     </style>
 </head>
@@ -343,34 +261,27 @@
 <body>
 
     <nav>
-        <div class="logo"><i class="fa-solid fa-circle-nodes"></i> PRO PITCH</div>
+        <div class="logo">PRO PITCH</div>
     </nav>
 
     <main>
-        <div class="pitch-wrapper" id="pitch">
-            <!-- Tokens injected here -->
-        </div>
+        <div class="pitch-wrapper" id="pitch"></div>
 
         <div class="bench-container">
             <div class="bench-panel">
-                <h3 class="bench-title"><i class="fa-solid fa-shield-halved" style="color: var(--team-a)"></i> Team A
-                    Bench</h3>
-                <div class="bench-list" id="bench-A"></div>
+                <h3 class="bench-title">Team A Bench</h3>
+                <div id="bench-A"></div>
             </div>
             <div class="bench-panel">
-                <h3 class="bench-title"><i class="fa-solid fa-shield-halved" style="color: var(--team-b)"></i> Team B
-                    Bench</h3>
-                <div class="bench-list" id="bench-B"></div>
+                <h3 class="bench-title">Team B Bench</h3>
+                <div id="bench-B"></div>
             </div>
         </div>
     </main>
 
     <div class="modal-backdrop" id="modal-backdrop">
-        <div class="modal-content" id="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <div id="player-details">
-                <!-- Details injected here -->
-            </div>
+        <div class="modal-content">
+            <div id="player-details"></div>
         </div>
     </div>
 
@@ -378,165 +289,127 @@
         const STORAGE_KEY = "football_match_data";
         let players = [];
 
+        const POSITIONS = ["GK", "LB", "RB", "CB", "DMF", "LMF", "RMF", "CMF", "AMF", "LWF", "RWF", "SS", "CF"];
+
+        function fillStats(p) {
+            const def = { pace: 50, shooting: 50, passing: 50, dribbling: 50, defending: 50, physical: 50, vision: 50, stamina: 50, strength: 50, aggression: 50 };
+            Object.keys(def).forEach(k => {
+                if (typeof p[k] !== "number") p[k] = def[k];
+            });
+        }
+
         function getDefaultData() {
             const data = [];
-            const teams = ["A", "B"];
-            const positions = ["GK", "DEF", "DEF", "MID", "MID", "FWD"];
-            const nationalities = ["England", "Brazil", "France", "Germany", "Spain", "Argentina", "Italy", "Portugal", "Netherlands", "Japan"];
-
             let id = 1;
-            teams.forEach(team => {
-                // Starters
-                positions.forEach((pos, idx) => {
-                    let px, py;
-                    if (team === "A") {
-                        py = 90 - (idx * 6);
-                        px = 50 + (idx % 2 === 0 ? idx * 10 : -idx * 10);
-                        if (pos === "GK") { px = 50; py = 92; }
-                        if (pos === "FWD") { px = 50; py = 55; }
-                    } else {
-                        py = 10 + (idx * 6);
-                        px = 50 + (idx % 2 === 0 ? idx * 10 : -idx * 10);
-                        if (pos === "GK") { px = 50; py = 8; }
-                        if (pos === "FWD") { px = 50; py = 45; }
-                    }
-
+            ["A", "B"].forEach(team => {
+                POSITIONS.slice(0, 6).forEach((pos, i) => {
                     data.push({
-                        id: id,
-                        name: `Player ${id} Fullname`,
-                        number: Math.floor(Math.random() * 98) + 1,
+                        id: id++,
+                        name: "Player " + id,
+                        number: Math.floor(Math.random() * 99),
                         position: pos,
-                        team: team,
+                        team,
                         status: "starter",
-                        pitchX: px,
-                        pitchY: py,
+                        pitchX: 50,
+                        pitchY: 20 + i * 8,
                         image: `https://i.pravatar.cc/150?img=${id}`,
-                        age: 20 + Math.floor(Math.random() * 15),
-                        nationality: nationalities[Math.floor(Math.random() * nationalities.length)],
-                        appearances: Math.floor(Math.random() * 100),
-                        goals: Math.floor(Math.random() * 50),
-                        assists: Math.floor(Math.random() * 30)
+                        age: 20,
+                        nationality: "Spain",
+                        appearances: 10,
+                        goals: 5,
+                        assists: 2,
+                        pace: 60, shooting: 60, passing: 60, dribbling: 60, defending: 60, physical: 60, vision: 60, stamina: 60, strength: 60, aggression: 60
                     });
-                    id++;
                 });
-
-                // Substitutes
-                for (let i = 0; i < 6; i++) {
-                    data.push({
-                        id: id,
-                        name: `Sub ${id} Name`,
-                        number: Math.floor(Math.random() * 98) + 1,
-                        position: positions[i % positions.length],
-                        team: team,
-                        status: "substitute",
-                        pitchX: null,
-                        pitchY: null,
-                        image: `https://i.pravatar.cc/150?img=${id}`,
-                        age: 18 + Math.floor(Math.random() * 18),
-                        nationality: nationalities[Math.floor(Math.random() * nationalities.length)],
-                        appearances: Math.floor(Math.random() * 50),
-                        goals: Math.floor(Math.random() * 10),
-                        assists: Math.floor(Math.random() * 10)
-                    });
-                    id++;
-                }
             });
             return data;
         }
 
         function init() {
             try {
-                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-                if (saved && Array.isArray(saved) && saved.length > 0) {
-                    players = saved;
-                } else {
-                    players = getDefaultData();
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
-                }
-            } catch (e) {
+                players = JSON.parse(localStorage.getItem(STORAGE_KEY)) || getDefaultData();
+            } catch {
                 players = getDefaultData();
             }
-            renderApp();
+            players.forEach(fillStats);
+            render();
         }
 
-        function renderApp() {
-            const pitch = document.getElementById('pitch');
-            const benchA = document.getElementById('bench-A');
-            const benchB = document.getElementById('bench-B');
-
-            pitch.innerHTML = '';
-            benchA.innerHTML = '';
-            benchB.innerHTML = '';
+        function render() {
+            document.getElementById("pitch").innerHTML = "";
+            document.getElementById("bench-A").innerHTML = "";
+            document.getElementById("bench-B").innerHTML = "";
 
             players.forEach(p => {
                 if (p.status === "starter") {
-                    const token = document.createElement('div');
-                    token.className = `player-token team-${p.team}`;
-                    token.style.left = p.pitchX + "%";
-                    token.style.top = p.pitchY + "%";
-                    token.style.transform = "translate(-50%, -50%)";
-                    token.style.position = "absolute";
-
-                    token.innerHTML = `
-                    <img src="${p.image}" class="avatar" onerror="this.src='https://i.pravatar.cc/150?img=${p.id}'">
-                    <div class="number-badge">${p.number}</div>
-                    <div class="name-label">${p.name}</div>
-                `;
-                    token.onclick = () => showDetails(p.id);
-                    pitch.appendChild(token);
+                    const el = document.createElement("div");
+                    el.className = "player-token";
+                    el.style.position = "absolute";
+                    el.style.left = p.pitchX + "%";
+                    el.style.top = p.pitchY + "%";
+                    el.innerHTML = `<img class="avatar" src="${p.image}"><div class="number-badge">${p.number}</div>`;
+                    el.onclick = () => showDetails(p.id);
+                    document.getElementById("pitch").appendChild(el);
                 } else {
-                    const card = document.createElement('div');
-                    card.className = 'player-card';
-                    card.innerHTML = `
-                    <img src="${p.image}" class="card-avatar" onerror="this.src='https://i.pravatar.cc/150?img=${p.id}'">
-                    <div class="card-info">
-                        <span class="card-name">${p.name}</span>
-                        <div class="card-meta">#${p.number} • <span class="pos-badge">${p.position}</span></div>
-                    </div>
-                `;
-                    card.onclick = () => showDetails(p.id);
-                    document.getElementById(`bench-${p.team}`).appendChild(card);
+                    const el = document.createElement("div");
+                    el.className = "player-card";
+                    el.innerHTML = `<img class="card-avatar" src="${p.image}"><div><div class="card-name">${p.name}</div><span class="pos-badge">${p.position}</span></div>`;
+                    el.onclick = () => showDetails(p.id);
+                    document.getElementById("bench-" + p.team).appendChild(el);
                 }
             });
         }
 
         function showDetails(id) {
             const p = players.find(x => x.id === id);
-            if (!p) return;
+            const d = document.getElementById("player-details");
 
-            const detailDiv = document.getElementById('player-details');
-            detailDiv.innerHTML = `
-            <div class="detail-header">
-                <img src="${p.image}" class="detail-img" onerror="this.src='https://i.pravatar.cc/150?img=${p.id}'">
-                <h2 class="detail-title">${p.name}</h2>
-                <p style="color:var(--text-muted)">Team ${p.team} • #${p.number}</p>
-            </div>
-            <div class="detail-grid">
-                <div class="detail-item"><span>Position</span><span>${p.position}</span></div>
-                <div class="detail-item"><span>Nationality</span><span>${p.nationality}</span></div>
-                <div class="detail-item"><span>Age</span><span>${p.age}</span></div>
-                <div class="detail-item"><span>Appearances</span><span>${p.appearances}</span></div>
-                <div class="detail-item"><span>Goals</span><span>${p.goals}</span></div>
-                <div class="detail-item"><span>Assists</span><span>${p.assists}</span></div>
-            </div>
-        `;
-            document.getElementById('modal-backdrop').style.display = 'flex';
+            d.innerHTML = `
+    <img src="${p.image}" class="detail-img">
+    <h2 class="detail-title">${p.name}</h2>
+    <div class="detail-grid">
+        <div>Position: ${p.position}</div>
+        <div>Nationality: ${p.nationality}</div>
+        <div>Goals: ${p.goals}</div>
+        <div>Assists: ${p.assists}</div>
+    </div>
+
+    <h3 style="margin-top:15px;color:var(--gold)">Stats</h3>
+
+    ${renderStat("PACE", p.pace)}
+    ${renderStat("SHOOTING", p.shooting)}
+    ${renderStat("PASSING", p.passing)}
+    ${renderStat("DRIBBLING", p.dribbling)}
+    ${renderStat("DEFENDING", p.defending)}
+    ${renderStat("PHYSICAL", p.physical)}
+    ${renderStat("VISION", p.vision)}
+    ${renderStat("STAMINA", p.stamina)}
+    ${renderStat("STRENGTH", p.strength)}
+    ${renderStat("AGGRESSION", p.aggression)}
+    `;
+
+            document.getElementById("modal-backdrop").style.display = "flex";
+        }
+
+        function renderStat(label, value) {
+            return `
+    <div class="stat-bar">
+        <div>${label} ${value}</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${value}%"></div></div>
+    </div>`;
         }
 
         function closeModal() {
-            document.getElementById('modal-backdrop').style.display = 'none';
+            document.getElementById("modal-backdrop").style.display = "none";
         }
 
-        window.onclick = (e) => {
-            if (e.target === document.getElementById('modal-backdrop')) closeModal();
-        };
-
-        window.onkeydown = (e) => {
-            if (e.key === "Escape") closeModal();
+        document.getElementById("modal-backdrop").onclick = e => {
+            if (e.target.id === "modal-backdrop") closeModal();
         };
 
         init();
     </script>
+
 </body>
 
 </html>
