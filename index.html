@@ -398,6 +398,35 @@
                     height: 5px;
                 }
             }
+
+            .modal-content {
+                position: relative;
+            }
+
+            .close-modal {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                width: 42px;
+                height: 42px;
+                border: none;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.08);
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: 0.25s ease;
+                z-index: 999;
+                backdrop-filter: blur(5px);
+            }
+
+            .close-modal:hover {
+                background: #ef4444;
+                transform: rotate(90deg) scale(1.08);
+            }
         }
     </style>
 </head>
@@ -494,7 +523,9 @@
             const overall = calculateOverall(p);
 
             d.innerHTML = `
-            <button class="close-modal" onclick="closeModal()">
+<div style="position:relative;">
+
+<button class="close-modal" onclick="closeModal()">
     <i class="fa-solid fa-xmark"></i>
 </button>
     <img src="${p.image || 'Default.png'}"
@@ -555,7 +586,8 @@
     ${renderStat("STAMINA", p.stamina)}
     ${renderStat("STRENGTH", p.strength)}
     ${renderStat("AGGRESSION", p.aggression)}
-    `;
+    </div>
+`;
 
             document.getElementById("modal-backdrop").style.display = "flex";
         }
